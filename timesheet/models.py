@@ -38,7 +38,7 @@ class Timesheet(models.Model):
     bill = models.BooleanField(blank=True, null=True)
     location = models.CharField(max_length= 50, choices= location_choices)
     year_week = models.CharField(max_length= 30, null=True) ## 2024_20
-    comment = models.CharField(max_length= 100, null=True, blank=True)
+    comment = models.CharField(max_length= 500, null=True, blank=True)
 
 
     class Meta:

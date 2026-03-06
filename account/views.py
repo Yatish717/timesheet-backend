@@ -404,7 +404,7 @@ class EmployeeProfileView(APIView):
 class AllEmployeeProfileView(APIView):
     permission_classes = [IsAuthenticated, ManagerPermission]
     pagination_class = PageNumberPagination
-
+ 
     def get(self, request, empid=None, format= None):
         try:
             user = request.user
@@ -414,12 +414,12 @@ class AllEmployeeProfileView(APIView):
                     print(userdata)
                 except Exception:
                     return Response({'msg': 'User with this employee ID does not exist ..'}, status=status.HTTP_400_BAD_REQUEST)
-
+ 
                 serializer = EmployeeProfileSerializer(userdata, context={"user":user})
                 return Response({'msg':serializer.data}, status= status.HTTP_200_OK)
-            
+           
             allUsers = Employee.objects.filter(is_verified= True).order_by('-created_at').values(
-                'empID','name', 'department__name','role').exclude(empID=user.empID)
+                'empID','name', 'department__name','role','costcenter__name').exclude(empID=user.empID)
             # allData = Employee
             # print(allUsers)
             # serializer = EmployeeProfileSerializer(allUsers, many = True, context={"user":user})
