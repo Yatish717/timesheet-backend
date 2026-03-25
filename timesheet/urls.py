@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import TimesheetCreateUpdateView,WeeklyReportView, ManagerRetrieveTimesheetView, \
             EmployeeRetriveDataWeekly, EmployeeRetriveDataApproveNotApprove, ManagerApproveTimesheetView, \
-            AdminApproveTimesheetView, ManagerModifyEmpTimesheetView
+            AdminApproveTimesheetView, ManagerModifyEmpTimesheetView,CostCenterListView
                ##  WeekReportManagerUpdateView,
 
 
@@ -24,6 +24,7 @@ urlpatterns = [
     # path('adminretriveyear/<str:emp>/<int:year>/', AdminApproveTimesheetView.as_view(), name='adminretriveyear'),
     path('adminretrive/<str:empid>/', AdminApproveTimesheetView.as_view(), name='adminretrive'),
     path('adminretriveweek/<str:empid>/<str:yr_wk>/', AdminApproveTimesheetView.as_view(), name='adminretriveweek'),
-    path('managerupdatetimesheet/', ManagerModifyEmpTimesheetView.as_view(), name='managerupdatetimesheet')
+    path('managerupdatetimesheet/', ManagerModifyEmpTimesheetView.as_view(), name='managerupdatetimesheet'),
+    path('costcenterlist/', CostCenterListView.as_view(), name='costcenterlist'),
 ]
 

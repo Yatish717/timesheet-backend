@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from account.models import Employee, CostCenter, Department, Organization, OfficeBranch, CompanyCode, EmployeeRole
+from account.models import Employee, CostCenter, Department, OfficeBranch, CompanyCode, EmployeeRole
 from account.utils import reset_pass_otp_email, main_email#department_change_email
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer 
 from rest_framework_simplejwt.tokens import RefreshToken 
@@ -21,6 +21,7 @@ class CostCenterSerializer(serializers.ModelSerializer):
         instance.name = validated_data.get('name', instance.name)
         instance.number = validated_data.get('number', instance.number)
         instance.description = validated_data.get('description', instance.description)
+        instance.company_code = validated_data.get('company_code', instance.company_code)
         instance.save()
         return instance
 
@@ -71,17 +72,17 @@ class CompanyCodeSerializer(serializers.ModelSerializer):
 
 
 
-class OrganizationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Organization
-        fields = "__all__"
+# class OrganizationSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Organization
+#         fields = "__all__"
 
 
-    def update(self, instance, validated_data):
-        # return super().update(instance, validated_data)
-        instance.name = validated_data.get('name', instance.name)
-        instance.save()
-        return instance
+#     def update(self, instance, validated_data):
+#         # return super().update(instance, validated_data)
+#         instance.name = validated_data.get('name', instance.name)
+#         instance.save()
+#         return instance
 
 
 
@@ -115,7 +116,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             token = super().get_token(user)
             token['name'] = user.name
             token['email'] = user.email
-            token['organization'] = user.organization.name
+            # token['organization'] = user.organization.name
             return token
         else:
             raise serializers.ValidationError('You are not verified')
@@ -137,7 +138,7 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
                 # add payload here
             decodeJTW['name'] = str(user.name)
             decodeJTW['email'] = str(user.email)
-            decodeJTW['organization'] = str(user.organization.name)
+            # decodeJTW['organization'] = str(user.organization.name)
             ## encode the modified jwt token
             encoded = jwt.encode(decodeJTW, config('DJANGO_SECRET_KEY'), algorithm="HS256")
             ## replace the access token with the modified one
@@ -159,7 +160,7 @@ class EmployeeRegistrationSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(required=True,style = {'input_type':'password'}, write_only =True)
     class Meta:
         model =Employee
-        fields = ['email','name','organization','empID','department','companyCode', 'costcenter',
+        fields = ['email','name','empID','department','companyCode', 'costcenter',
                   'role','password','password2','doj', 'branch']
         extra_kwargs = {
             'password':{'write_only':True},            ## password => write_only field
@@ -176,8 +177,18 @@ class EmployeeRegistrationSerializer(serializers.ModelSerializer):
         return data
 
                 ## if the validation is successfull then create that 
+    # def create(self, validate_data):
+    #     return Employee.objects.create_user(**validate_data)
+
+            # ===== start change =====
     def create(self, validate_data):
+        costcenter = validate_data.get('costcenter')
+
+        if costcenter:
+            validate_data['companyCode'] = costcenter.company_code
+
         return Employee.objects.create_user(**validate_data)
+    # ===== end change =====
 
 
 
@@ -185,11 +196,11 @@ class EmployeeRegistrationSerializer(serializers.ModelSerializer):
 
                 ## This is for login page
 class EmployeeLoginSerializer(serializers.ModelSerializer):
-    empID = serializers.CharField(max_length = 100)
+    email = serializers.EmailField(max_length=100)
     companyCode = serializers.CharField(max_length = 20)
     class Meta:
         model = Employee
-        fields = ['companyCode','empID','password']
+        fields = ['companyCode','email','password']
 
 
 
@@ -198,7 +209,7 @@ class EmployeeLoginSerializer(serializers.ModelSerializer):
 class EmployeeProfileSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(format="%Y-%m-%d")
 
-    organization = OrganizationSerializer()
+    # organization = OrganizationSerializer()
     department = DepartmentSerializer()
     branch = OfficeBranchSerializer()
     companyCode = CompanyCodeSerializer()
@@ -225,7 +236,7 @@ class EmployeeProfileSerializer(serializers.ModelSerializer):
         model = Employee
         # fields = ['email','name','organization_name','empID','department_name','companyCode_name','costcenter_name',
         #           'role_name','created_at','doj','branch_name',]
-        fields = ['email','name','organization','empID','department','companyCode','costcenter',
+        fields = ['email','name','empID','department','companyCode','costcenter',
                   'role','created_at','doj','branch',]
 
     """
@@ -347,7 +358,7 @@ class EmployeeRegistrationByAdminSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(required=True,style = {'input_type':'password'}, write_only =True)
     class Meta:
         model =Employee
-        fields = ['email','name','organization','empID','department','companyCode', 'costcenter',
+        fields = ['email','name','empID','department','companyCode', 'costcenter',
                   'role','password','password2','doj', 'branch']
         extra_kwargs = {
             'password':{'write_only':True},            ## password => write_only field
@@ -365,9 +376,19 @@ class EmployeeRegistrationByAdminSerializer(serializers.ModelSerializer):
         #     data['is_manager'] = False
         return data
 
-                ## if the validation is successfull then create that 
+    #             ## if the validation is successfull then create that 
+    # def create(self, validate_data):
+    #     return Employee.objects.create_user(**validate_data)
+    
+        # ===== start change =====
     def create(self, validate_data):
+        costcenter = validate_data.get('costcenter')
+
+        if costcenter:
+            validate_data['companyCode'] = costcenter.company_code
+
         return Employee.objects.create_user(**validate_data)
+    # ===== end change =====
 
 
 
@@ -378,7 +399,7 @@ class AdminUpdateEmployeeProfileSerializer(serializers.ModelSerializer):
     message = serializers.CharField(max_length= 200, required=False)
     class Meta:
         model =Employee
-        fields = ['email','name','organization','empID','department','companyCode', 'costcenter',
+        fields = ['email','name','empID','department','companyCode', 'costcenter',
                   'role','doj', 'branch', 'dol', 'message']
 
 
@@ -415,11 +436,15 @@ class AdminUpdateEmployeeProfileSerializer(serializers.ModelSerializer):
         # return super().update(instance, validated_data)
         instance.email = validated_data.get('email', instance.email)
         instance.name = validated_data.get('name', instance.name)
-        instance.organization = validated_data.get('organization', instance.organization)
+        # instance.organization = validated_data.get('organization', instance.organization)
         instance.empID = validated_data.get('empID', instance.empID)
         instance.department = validated_data.get('department', instance.department)
-        instance.companyCode = validated_data.get('companyCode', instance.companyCode)
+        # instance.companyCode = validated_data.get('companyCode', instance.companyCode)
         instance.costcenter = validated_data.get('costcenter', instance.costcenter)
+                # ===== start change =====
+        if instance.costcenter:
+            instance.companyCode = instance.costcenter.company_code
+        # ===== end change =====
         instance.role = validated_data.get('role', instance.role)
         instance.doj = validated_data.get('doj', instance.doj)
         instance.dol = validated_data.get('dol', instance.dol)
@@ -435,3 +460,16 @@ class AdminUpdateEmployeeProfileSerializer(serializers.ModelSerializer):
         #     DepartmentTracker.objects.create(department=new_department, message=message, status="NotSeen")
 
         return instance
+    
+
+# # ===== start change =====
+# class CostCenterDisplaySerializer(serializers.ModelSerializer):
+#     display = serializers.SerializerMethodField()
+
+#     class Meta:
+#         model = CostCenter
+#         fields = ['id', 'display']
+
+#     def get_display(self, obj):
+#         return f"{obj.name} - {obj.number}"
+# # ===== end change =====

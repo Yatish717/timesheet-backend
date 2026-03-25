@@ -3,10 +3,10 @@ from rest_framework import status as httpstatus
 from rest_framework.views import APIView
 from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
-from account.models import Employee
+from account.models import Employee,CostCenter
 from projectdata.models import Project
 from .serializers import TimesheetSerializer, TimesheetRetrieveSerializer, ManagerUpdateEmpTimesheetSerializer, WeeklyReportSaveSerializer, \
-                ManagerAPproveWeeklyReportSerializer
+                ManagerAPproveWeeklyReportSerializer,CostCenterListSerializer
 from .models import Timesheet, Status
 from django.db.models import Q, F, Count
 # from datetime import datetime, timedelta
@@ -563,6 +563,25 @@ class AdminApproveTimesheetView(APIView):
             return Response({'msg': message}, status=httpstatus.HTTP_200_OK)
         except Exception as e:
             return Response({'msg': str(e)}, status=httpstatus.HTTP_400_BAD_REQUEST)
+        
+
+# ====== start change ======
+class CostCenterListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, format=None):
+        try:
+            costcenters = CostCenter.objects.all()
+
+            serializer = CostCenterListSerializer(costcenters, many=True)
+
+            return Response({'msg': serializer.data}, status=httpstatus.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({'msg': str(e)}, status=httpstatus.HTTP_400_BAD_REQUEST)
+        
+# ====== end change ======
+
 
 
 

@@ -2,7 +2,7 @@ from django.urls import path, include
 from .views import CustomTokenObtainPairView, CustomTokenRefreshView, EmployeeRegistrationView, EmployeeLoginView, \
         EmployeeProfileView, AllEmployeeProfileView, EmployeeChangePasswordView, SendPasswordResetEmailView, \
         EmployeePasswordResetView, EmployeeRegistrationByAdminView, DeleteEmployeeView, CostCenterView, DepartmentView, \
-        EmployeeRoleView, CompanyCodeView, OrganizationView, OfficeBranchView, AdminUpdateEmployeeProfileView
+        EmployeeRoleView, CompanyCodeView, OfficeBranchView, AdminUpdateEmployeeProfileView
 from rest_framework_simplejwt.views import TokenVerifyView 
 
 
@@ -30,10 +30,12 @@ urlpatterns = [
     path('roleupdate/<int:pk>/', EmployeeRoleView.as_view(), name= 'roleupdate'),
     path('companycode/', CompanyCodeView.as_view(), name= 'companycode'),
     path('companycodeupdate/<int:pk>/', CompanyCodeView.as_view(), name= 'companycodeupdate'),
-    path('org/', OrganizationView.as_view(), name= 'org'),
-    path('orgupdate/<int:pk>/', OrganizationView.as_view(), name= 'orgupdate'),
+    # path('org/', OrganizationView.as_view(), name= 'org'),
+    # path('orgupdate/<int:pk>/', OrganizationView.as_view(), name= 'orgupdate'),
     path('branch/', OfficeBranchView.as_view(), name= 'branch'),
     path('branchupdate/<int:pk>/', OfficeBranchView.as_view(), name= 'branchupdate'),
+    # path('costcenter-display/', CostCenterDisplayView.as_view(), name='costcenter-display'),
+
 ]
 
 

@@ -5,12 +5,12 @@ from rest_framework.views import APIView
 from account.serializers import CustomTokenObtainPairSerializer, CustomTokenRefreshSerializer, \
             EmployeeRegistrationSerializer,EmployeeLoginSerializer, EmployeeProfileSerializer, EmployeeChangePassword, \
             SendPasswordResetEmailSerializer, EmployeePasswordResetSerializer, EmployeeRegistrationByAdminSerializer, \
-            CostCenterSerializer, DepartmentSerializer, EmployeeRoleSerializer, CompanyCodeSerializer, OrganizationSerializer, \
+            CostCenterSerializer, DepartmentSerializer, EmployeeRoleSerializer, CompanyCodeSerializer, \
             OfficeBranchSerializer, AdminUpdateEmployeeProfileSerializer
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
-from .models import Employee, CostCenter, Department, EmployeeRole, CompanyCode, Organization, OfficeBranch
+from .models import Employee, CostCenter, Department, EmployeeRole, CompanyCode, OfficeBranch
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.utils import timezone
 from rest_framework.pagination import PageNumberPagination
@@ -38,7 +38,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 # Check if the user is verified
         # if not user.is_verified:
         #     return Response({'msg': 'User is not verified'}, status=status.HTTP_400_BAD_REQUEST)
-            user = Employee.objects.get(empID = user)
+            user = Employee.objects.get(email = user)
                 ## take the token from the serializer
             token = serializer.validated_data
                 ## create refresh_token
@@ -74,14 +74,34 @@ class CostCenterView(APIView):
         try:
             user = request.user
             serializer = CostCenterSerializer(data= request.data, context={'request':request})
+
+             # start change
             if serializer.is_valid():
-                if CostCenter.objects.filter(name= serializer.validated_data['name'],
-                                              number=serializer.validated_data['number']).exists():
-                    return Response({'msg':'Cost center having same name and number is alredy exists'}, 
+
+                name = serializer.validated_data['name']
+                number = serializer.validated_data['number']
+
+               
+
+
+                if CostCenter.objects.filter(number=number).exists():
+                    return Response({'msg':'Cost center having same number is alredy exists'},
                                     status=status.HTTP_400_BAD_REQUEST)
-                serializer.save()
+                
+                costcenter = serializer.save()
+
+              
+                     # start change
+                Department.objects.get_or_create(
+                    name=number,
+                    defaults={"description": name}
+                )
+                     # end change
+
                 return Response({'msg':'New cost-center data saved ...'}, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            # end change
+            
         except Exception as e:
             return Response({'msg':str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -90,10 +110,10 @@ class CostCenterView(APIView):
         try:
             user = request.user
             all_cost_centrs = CostCenter.objects.all()
-            # serializer = CostCenterSerializer(all_cost_centrs, many=True)
+            serializer = CostCenterSerializer(all_cost_centrs, many=True)
             # print(serializer.data)
-            cost_center_data = {data.name:data.number for data in all_cost_centrs}
-            return Response({'msg':cost_center_data}, status= status.HTTP_200_OK)
+            # cost_center_data = {data.name:data.number for data in all_cost_centrs}
+            return Response({'msg': serializer.data}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'msg':str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -239,45 +259,45 @@ class CompanyCodeView(APIView):
 
 
 
-class OrganizationView(APIView):
-    permission_classes = [IsAuthenticated, AdminPermission]
+# class OrganizationView(APIView):
+#     permission_classes = [IsAuthenticated, AdminPermission]
 
-    def post(self, request, format=None):
-        try:
-            user = request.user
-            serializer = OrganizationSerializer(data= request.data, context={'request':request})
-            if serializer.is_valid():
-                serializer.save()
-                return Response({'msg':'New organization saved ...'}, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response({'msg':str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-    def get(self, request, format=None):
-        try:
-            user = request.user
-            all_orgs = Organization.objects.all()
-            orgs_data = {data.id:data.name for data in all_orgs}
-            return Response({'msg':orgs_data}, status= status.HTTP_200_OK)
-        except Exception as e:
-            return Response({'msg':str(e)}, status=status.HTTP_400_BAD_REQUEST)
+#     def post(self, request, format=None):
+#         try:
+#             user = request.user
+#             serializer = OrganizationSerializer(data= request.data, context={'request':request})
+#             if serializer.is_valid():
+#                 serializer.save()
+#                 return Response({'msg':'New organization saved ...'}, status=status.HTTP_201_CREATED)
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#         except Exception as e:
+#             return Response({'msg':str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-    def patch(self, request, pk, format=None):
-        try:
-            try:
-                organization_data = Organization.objects.get(id = pk)
-            except Exception:
-                return Response({'msg':'Organization does not exist with this ID'}, status=status.HTTP_400_BAD_REQUEST)
-            serializer = OrganizationSerializer(organization_data, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({'msg':'Organization data updated ...'}, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response({'msg':str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    # def get(self, request, format=None):
+    #     try:
+    #         user = request.user
+    #         all_orgs = Organization.objects.all()
+    #         orgs_data = {data.id:data.name for data in all_orgs}
+    #         return Response({'msg':orgs_data}, status= status.HTTP_200_OK)
+    #     except Exception as e:
+    #         return Response({'msg':str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+    # def patch(self, request, pk, format=None):
+    #     try:
+    #         try:
+    #             organization_data = Organization.objects.get(id = pk)
+    #         except Exception:
+    #             return Response({'msg':'Organization does not exist with this ID'}, status=status.HTTP_400_BAD_REQUEST)
+    #         serializer = OrganizationSerializer(organization_data, data=request.data, partial=True)
+    #         if serializer.is_valid():
+    #             serializer.save()
+    #             return Response({'msg':'Organization data updated ...'}, status=status.HTTP_201_CREATED)
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #     except Exception as e:
+    #         return Response({'msg':str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -351,11 +371,11 @@ class EmployeeLoginView(APIView):
             serializer = EmployeeLoginSerializer(data= request.data)
             if serializer.is_valid():
                 
-                empID = serializer.data.get('empID')
+                email = serializer.data.get('email')
                 password = serializer.data.get('password')
                 companyCode = serializer.data.get('companyCode')
                 # user_auth = CustomEmployeeAuthentication.authenticate(self, empID= empID, password = password, companyCode=companyCode)
-                user_auth = authenticate(empID= empID, password = password)
+                user_auth = authenticate(email=email, password = password)
                 if user_auth is not None:
                     if user_auth.companyCode.code != companyCode:
                         return Response({'msg':'wrong credential'}, status=status.HTTP_404_NOT_FOUND)
@@ -419,7 +439,7 @@ class AllEmployeeProfileView(APIView):
                 return Response({'msg':serializer.data}, status= status.HTTP_200_OK)
            
             allUsers = Employee.objects.filter(is_verified= True).order_by('-created_at').values(
-                'empID','name', 'department__name','role','costcenter__name').exclude(empID=user.empID)
+                'empID','name', 'department__name','role__roleName','costcenter__name','costcenter__number').exclude(empID=user.empID)
             # allData = Employee
             # print(allUsers)
             # serializer = EmployeeProfileSerializer(allUsers, many = True, context={"user":user})
@@ -558,5 +578,21 @@ class DeleteEmployeeView(APIView):
             return Response({'msg': 'User has been deleted successfully'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'msg': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+# # ===== start change =====
+# class CostCenterDisplayView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def get(self, request, format=None):
+#         try:
+#             costcenters = CostCenter.objects.all()
+
+#             serializer = CostCenterDisplaySerializer(costcenters, many=True)
+
+#             return Response({'msg': serializer.data}, status=200)
+
+#         except Exception as e:
+#             return Response({'msg': str(e)}, status=400)
+# # ===== end change =====
 
 

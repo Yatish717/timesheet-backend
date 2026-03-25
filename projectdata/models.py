@@ -1,5 +1,5 @@
 from django.db import models
-from account.models import Employee, Organization
+from account.models import Employee,CostCenter
 
 
 
@@ -9,8 +9,9 @@ class Project(models.Model):
     projectCode = models.CharField(max_length=4, unique=True)
     projectManager = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, related_name="project_manager")
     projectAddedby = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, blank=True, related_name="project_added_by")
-    organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='project_organization')
-    complete = models.BooleanField(default=False)
+    # organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='project_organization')
+    costCenter = models.ForeignKey(CostCenter,on_delete=models.SET_NULL,null=True,blank=True,related_name="project_costcenter")        ##added
+    status = models.BooleanField(default=False)
     created_at = models.DateField(auto_now_add=True)
 
 

@@ -4,7 +4,7 @@ from .models import Project, ProjectSubcode, ProjectSubcodeActivity
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ['projectID','projectName', 'projectCode', 'projectManager', 'projectAddedby','created_at', 'complete']
+    list_display = ['projectID','projectName', 'projectCode', 'projectManager', 'projectAddedby','created_at', 'status']
 
 
 @admin.register(ProjectSubcode)

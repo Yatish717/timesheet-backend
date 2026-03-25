@@ -56,7 +56,7 @@ class ProjectCreateUpdateView(APIView):
 #         user = request.user
 #         try:
 #             if not pk:
-#                 all_projects = Project.objects.filter(complete=False)
+#                 all_projects = Project.objects.filter(status=False)
 #                 serializer = ProjectCreateSerializer(all_projects, many=True)
 #                 return Response({"all_projects":serializer.data}, status= status.HTTP_200_OK)
 #             else:
@@ -183,7 +183,7 @@ class ProjectNameView(APIView):
             if user.role.id == 1:
                 all_projects = Project.objects.all().values('projectID','projectName', 'projectCode')
             else:
-                all_projects = Project.objects.filter(complete=False).values('projectID','projectName', 'projectCode')
+                all_projects = Project.objects.filter(status=False).values('projectID','projectName', 'projectCode')
             # project_data_dict = {project.projectID:project.projectName for project in all_projects}
             return Response({'msg': all_projects}, status= status.HTTP_200_OK)
         except Exception as e:
@@ -198,7 +198,7 @@ class ManagerRetrieveAllProjects(APIView):
     def get(self, request, format=None):
         try:
             user = request.user
-            all_projects = Project.objects.filter(projectManager=user, complete=False).values("projectID", "projectCode","projectName")
+            all_projects = Project.objects.filter(projectManager=user, status=False).values("projectID", "projectCode","projectName")
             # serializer = ProjectCreateSerializer(all_projects, many=True)
             return Response({'all_projects':all_projects}, status= status.HTTP_200_OK)
         except Exception as e:
@@ -217,7 +217,7 @@ class ManagerRetrieveProjectUser(APIView):
                 project_data = Project.objects.get(projectManager=user, projectID=pk)
             except Exception:
                 return Response({'msg': 'Project does not belongs to you ....'}, status=status.HTTP_400_BAD_REQUEST)
-            # if project_data.complete:
+            # if project_data.status:
             #     return Response({'msg': 'Project is completed ... you can not see completed project data ....'}, 
             #                     status=status.HTTP_400_BAD_REQUEST)
             associated_users = Timesheet.objects.filter(project=project_data).values_list(
@@ -248,9 +248,13 @@ class ProjectDetailAPIView(APIView):
             serializer = ProjectSerializerRetrive(project)
         else:
             ## Get the Project with its related ProjectSubcode and ProjectSubcodeActivity
-            project = Project.objects.filter(organization=user.organization, complete=False).prefetch_related(
+            # project = Project.objects.filter(organization=user.organization,status=False).prefetch_related(
+            #     Prefetch('project_subcode__project_subcode_activity')
+            # )
+
+            project = Project.objects.all().prefetch_related(
                 Prefetch('project_subcode__project_subcode_activity')
-            )
+)
 
             ## Serialize the Project data
             serializer = ProjectSerializerRetrive(project, many=True)

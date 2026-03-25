@@ -10,7 +10,7 @@ from account.models import Employee
 class TimesheetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Timesheet
-        fields = ['date','hours','project','projectsubcode','project_subcode_activity','location',
+        fields = ['date','hours','project','projectsubcode','project_subcode_activity','location', 'employee_costcenter',
                   'year_week', 'comment']
 
 
@@ -24,6 +24,10 @@ class TimesheetSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Fields 'project', 'projectsubcode', and 'project_subcode_activity' are required."
             )
+        if 'employee_costcenter' not in attrs:
+            raise serializers.ValidationError(
+                "Field 'employee_costcenter' is required."
+            )
 
         input_project = attrs['project']
         input_project_subcode = attrs['projectsubcode']
@@ -35,7 +39,7 @@ class TimesheetSerializer(serializers.ModelSerializer):
                 "Mismatch: 'projectsubcode' and 'project_subcode_activity' do not belong to the same project."
             )
 
-        attrs['employee_costcenter'] = user.costcenter
+        
 
         return attrs
 
@@ -164,5 +168,12 @@ class ManagerUpdateEmpTimesheetSerializer(serializers.ModelSerializer):
         model = Timesheet
         fields = ['id','bill','comment']
         list_serializer_class = BulkUpdateListSerializer
+
+# ====== start change ======
+class CostCenterListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CostCenter
+        fields = ['id', 'name', 'number']
+# ====== end change ======
 
 

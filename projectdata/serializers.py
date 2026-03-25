@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Project, ProjectSubcode, ProjectSubcodeActivity
 from django.utils import timezone
-from account.serializers import OrganizationSerializer
+
 
 
 
@@ -17,8 +17,8 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
         if "projectManager" not in attrs:
             raise serializers.ValidationError("-projectManager- field is missing ....")
         project_manager = attrs.get('projectManager')
-        if project_manager.organization != user.organization:
-            raise serializers.ValidationError("You can't assign other organization user in your organization project ...")
+        # if project_manager.organization != user.organization:
+        #     raise serializers.ValidationError("You can't assign other organization user in your organization project ...")
         if project_manager.role.id not in [1,2]:
             raise serializers.ValidationError("-projectManager- user does not have manager rights ... ")
         return super().validate(attrs)
@@ -32,7 +32,7 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.projectManager = validated_data.get('projectManager', instance.projectManager)
         instance.projectCode = validated_data.get('projectCode', instance.projectCode)
-        instance.complete = validated_data.get('complete', instance.complete)
+        instance.status = validated_data.get('status', instance.status)
         # return super().update(instance, validated_data)
         instance.save()
         return instance
@@ -95,11 +95,11 @@ class ProjectSubcodeSerializerRetrive(serializers.ModelSerializer):
 # Serializer for Project with nested ProjectSubcode
 class ProjectSerializerRetrive(serializers.ModelSerializer):
     project_subcode = ProjectSubcodeSerializerRetrive(many=True)
-    organization = OrganizationSerializer()
+    # organization = OrganizationSerializer()
     class Meta:
         model = Project
-        fields = ['projectID', 'projectName', 'projectCode', 'projectManager', 'projectAddedby', 'complete',
-                  'created_at','organization', 'project_subcode']
+        fields = ['projectID', 'projectName', 'projectCode', 'projectManager', 'projectAddedby','costCenter', 'status',
+                  'created_at', 'project_subcode']
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

@@ -1,14 +1,17 @@
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
+
 # from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 
 
 class CostCenter(models.Model):
-    name = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=20)
     number = models.CharField(max_length=20, unique=True)
     description = models.CharField(max_length=50, null=True)
+    company_code = models.ForeignKey("account.CompanyCode",on_delete=models.PROTECT,related_name="costcenter_company")     ##added
+   
     # organization = models.ForeignKey("Organization", on_delete=models.PROTECT, related_name='costcenter_organization')
     class Meta:
         db_table = "Aspl_CostCenter"
@@ -68,15 +71,15 @@ class CompanyCode(models.Model):
 
 
 
-class Organization(models.Model):
-    name = models.CharField(max_length=20, unique=True)
+# class Organization(models.Model):
+#     name = models.CharField(max_length=20, unique=True)
     
-    class Meta:
-        db_table = "Organization"
-        verbose_name_plural = "Organizations"
+#     class Meta:
+#         db_table = "Organization"
+#         verbose_name_plural = "Organizations"
 
-    def __str__(self) -> str:
-        return f"{self.id}_{self.name}"
+#     def __str__(self) -> str:
+#         return f"{self.id}_{self.name}"
 
 
 
@@ -95,7 +98,7 @@ class OfficeBranch(models.Model):
 
 
 class EmployeeManager(BaseUserManager):
-    def create_user(self, email, name, empID, organization=None, department=None, companyCode=None, costcenter=None, role=None, branch=None,
+    def create_user(self, email, name, empID, department=None, companyCode=None, costcenter=None, role=None, branch=None,
                     password=None, password2=None, doj=None):
 
         if not email:
@@ -110,7 +113,6 @@ class EmployeeManager(BaseUserManager):
             name = name,
             empID = empID,
             role= role,
-            organization = organization,
             department = department,
             companyCode = companyCode,
             costcenter = costcenter,
@@ -149,7 +151,7 @@ class Employee(AbstractBaseUser):
     email = models.EmailField(unique=True, max_length=255)
     name = models.CharField(max_length=100)
     empID = models.CharField(max_length=20, primary_key=True, db_index=True)
-    organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='employee_department', null=True, blank=True)
+    # organization = models.ForeignKey(Organization, on_delete=models.PROTECT, related_name='employee_department', null=True, blank=True)
     department = models.ForeignKey(Department, on_delete=models.PROTECT, related_name='employee_department', null=True, blank=True)
     companyCode = models.ForeignKey(CompanyCode, on_delete=models.PROTECT, related_name='employee_companycode', null=True, blank=True)
     otp = models.CharField(max_length=10, null=True, blank=True, default='')
@@ -172,8 +174,8 @@ class Employee(AbstractBaseUser):
         #     models.Index(fields=['empID'], name='empID_index'),
         # ]
 
-    USERNAME_FIELD = 'empID'
-    REQUIRED_FIELDS = ['name', 'email']
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['name', 'empID']
 
     objects = EmployeeManager()
 
@@ -196,3 +198,23 @@ class Employee(AbstractBaseUser):
         "Is the user a member of staff?"
         # Simplest possible answer: All admins are staff
         return self.is_superuser
+    
+        # ===== start change =====
+    def save(self, *args, **kwargs):
+
+        if self.costcenter:
+            # Step 1: Auto assign companyCode
+            self.companyCode = self.costcenter.company_code
+
+            # Step 2: Auto assign department using costcenter.number
+            from account.models import Department
+
+            department = Department.objects.filter(
+                name=self.costcenter.number
+            ).first()
+
+            if department:
+                self.department = department
+
+        super().save(*args, **kwargs)
+    # ===== end change =====
