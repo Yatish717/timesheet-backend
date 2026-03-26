@@ -27,7 +27,7 @@ class Timesheet(models.Model):
     )
     date = models.DateField(db_index=True)
     status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, related_name="timesheet_status")
-    hours = models.FloatField(null=True, blank=True)
+    hours = models.DurationField(null=True, blank=True)  
     project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, related_name="timesheet_project")
     projectsubcode = models.ForeignKey(ProjectSubcode, on_delete=models.SET_NULL, null=True, related_name="timesheet_projectsubcode")
     project_subcode_activity = models.ForeignKey(ProjectSubcodeActivity, on_delete=models.SET_NULL, null=True, 
