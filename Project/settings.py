@@ -101,14 +101,14 @@ WSGI_APPLICATION = 'Project.wsgi.application'
 import pymysql
 pymysql.install_as_MySQLdb()
 
-DATABASES = {  
-    'default': {  
-        'ENGINE':config('DB_ENGINE'),  
-        'NAME':config('DB_NAME'),  
-        'USER':config('DB_USER'),  
-        'PASSWORD':config('DB_PASSWORD'),  
-        'HOST':config('DB_HOST'),        
-        'PORT':config('DB_PORT'),   
+DATABASES = {
+    'default': {
+        'ENGINE': os.environ.get('DB_ENGINE'),
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST'),
+        'PORT': os.environ.get('DB_PORT'),
     }
 }
 
@@ -200,8 +200,8 @@ SIMPLE_JWT = {
 EMAIL_BACKEND= "django.core.mail.backends.console.EmailBackend"              ## this is during development
 EMAIL_HOST= 'smtp.gmail.com'
 EMAIL_PORT= 587
-EMAIL_HOST_USER = config('EMAIL_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_PASS')
+EMAIL_HOST_USER = os.environ.get('EMAIL_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASS')
 EMAIL_USE_TLS = True
 
 MEDIA_URL = "/media/"
