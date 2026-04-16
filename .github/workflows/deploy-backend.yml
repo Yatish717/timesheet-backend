@@ -24,7 +24,9 @@ jobs:
           pip install -r requirements.txt
 
       - name: Zip application
-        run: zip -r app.zip . -x "*.git*"
+        run: |
+          zip -r app.zip . -x "*.git*" -x "__pycache__/*" -x "*.pyc"
+          zip -r app.zip .ebextensions/
 
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v22
