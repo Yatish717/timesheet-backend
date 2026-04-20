@@ -11,7 +11,7 @@ def health(request):
 urlpatterns = [
     path('health/', health),
     path('admin/', admin.site.urls),
-    path('', views.homepage, name='homepage'),
+    path('', health, name='homepage'),
     path('user/', include('account.urls')),
     path('project/', include('projectdata.urls')),
     path('timesheet/', include('timesheet.urls')),
